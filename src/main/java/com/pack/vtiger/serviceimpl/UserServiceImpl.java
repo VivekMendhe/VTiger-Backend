@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.module.ResolutionException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,17 +35,26 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserDTO getUserById(Integer id) {
-		return null;
+		User user = userRepository.findById(id).orElseThrow(() -> new ResolutionException("User Id not found"));
+		return entityToDTO(user);
 	}
 
 	@Override
 	public UserDTO updateUser(Integer id, UserDTO userDTO) {
-		return null;
+		User existingUser = userRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("User with ID " + id + " not found"));
+		modelMapper.map(userDTO, existingUser);
+		User updatedUser = userRepository.save(existingUser);
+		return entityToDTO(updatedUser);
 	}
 
 	@Override
 	public void deleteUser(Integer id) {
-
+		if (userRepository.existsById(id)) {
+			userRepository.deleteById(id);
+		} else {
+			throw new RuntimeException("User with ID " + id + " not found");
+		}
 	}
 
 	// convert dto to entity
